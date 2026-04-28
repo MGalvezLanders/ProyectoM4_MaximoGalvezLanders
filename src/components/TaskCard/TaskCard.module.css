@@ -1,0 +1,111 @@
+.taskCard {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  transition: box-shadow var(--transition), opacity var(--transition);
+}
+
+.taskCard:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.completed {
+  opacity: 0.6;
+}
+
+.completed .taskTitle {
+  text-decoration: line-through;
+  color: var(--color-text-secondary);
+}
+
+.topRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+}
+
+.checkbox {
+  margin-top: 3px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  flex-shrink: 0;
+  accent-color: var(--color-blue);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  flex: 1;
+}
+
+.taskTitle {
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.taskDescription {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.5;
+}
+
+.date {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-sm);
+}
+
+.editButton {
+  flex: 1;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-blue);
+  background: var(--color-blue-light);
+  color: var(--color-blue-dark);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.editButton:hover:not(:disabled) {
+  background: var(--color-blue);
+  color: var(--color-white);
+}
+
+.editButton:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+  border-color: var(--color-border);
+  background: var(--color-task-bg);
+  color: var(--color-text-disabled);
+}
+
+.deleteButton {
+  flex: 1;
+  padding: var(--space-xs) var(--space-md);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-danger);
+  background: var(--color-danger-light);
+  color: var(--color-danger);
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+}
+
+.deleteButton:hover {
+  background: var(--color-danger);
+  color: var(--color-white);
+}
