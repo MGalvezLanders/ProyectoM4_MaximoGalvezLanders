@@ -7,10 +7,13 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+.env
+PLAN.md
 node_modules
 dist
 dist-ssr
 *.local
+Presentación de PI M4.pdf
 
 # Editor directories and files
 .vscode/*
