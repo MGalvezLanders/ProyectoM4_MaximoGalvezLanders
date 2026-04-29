@@ -1,10 +1,16 @@
 import type { JSX } from "react";
-import { Link, Outlet } from "react-router-dom";
-import { useAuth } from "../../hooks/useAuth";
+import { Link, Outlet, useNavigate } from "react-router-dom";
+import { useAuth } from "../../features/auth/Authenticator";
 import styles from "./navbar.module.css";
 
 function NavBar(): JSX.Element {
-  const { user, logout } = useAuth();
+  const { user, logOut } = useAuth();
+  const navigate = useNavigate();
+
+  async function handleLogOut(): Promise<void> {
+    await logOut();
+    navigate("/login");
+  }
 
   return (
     <div className={styles.navContainer}>
@@ -12,12 +18,14 @@ function NavBar(): JSX.Element {
         <Link className={styles.link} to="/">Inicio</Link>
         <span className={styles.separator}>|</span>
         <Link className={styles.link} to="/about">Acerca de</Link>
+        <span className={styles.separator}>|</span>
+        <Link className={styles.link} to="/contact">Contacto</Link>
         {user ? (
           <>
             <span className={styles.separator}>|</span>
             <Link className={styles.link} to="/tasks">Mis Tareas</Link>
             <span className={styles.separator}>|</span>
-            <button className={styles.link} onClick={logout}>Cerrar sesión</button>
+            <button className={styles.link} onClick={handleLogOut}>Cerrar sesión</button>
           </>
         ) : (
           <>
