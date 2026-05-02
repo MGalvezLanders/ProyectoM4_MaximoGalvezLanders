@@ -1,39 +1,96 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { JSX } from "react";
+import { Timestamp } from "firebase/firestore";
 import type { Task } from "../types/task";
-import { MOCK_TASKS } from "../mocks/tasks";
+import { useAuth } from "../features/auth/Authenticator";
+import { getTasks, createTask, updateTask, toggleTask, deleteTask } from "../services/taskService";
 import TaskList from "../components/TaskList/taskList";
 import TaskForm from "../components/TaskForm/taskForm";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import styles from "./TasksPage.module.css";
 
 function TasksPage(): JSX.Element {
-  const [tasks, setTasks] = useState<Task[]>(MOCK_TASKS);
+  const { user } = useAuth();
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
   const formVisible = showAddForm || editingTask !== null;
 
-  function handleToggle(id: string): void {
+  useEffect(() => {
+    if (!user) return;
+
+    let cancelled = false;
+
+    async function loadTasks() {
+      try {
+        setLoading(true);
+        setError(null);
+        const data = await getTasks(user!.uid);
+        if (!cancelled) setTasks(data);
+      } catch (e) {
+        if (!cancelled)
+          setError(e instanceof Error ? e.message : "No se pudieron cargar las tareas.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    }
+
+    loadTasks();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user]);
+
+  async function handleToggle(id: string): Promise<void> {
+    const task = tasks.find((t) => t.id === id);
+    if (!task) return;
+    const newCompleted = !task.completed;
     setTasks((prev) =>
-      prev.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
+      prev.map((t) => (t.id === id ? { ...t, completed: newCompleted } : t))
     );
+    try {
+      await toggleTask(id, newCompleted);
+    } catch (e) {
+      setTasks((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, completed: task.completed } : t))
+      );
+      setError(e instanceof Error ? e.message : "No se pudo actualizar la tarea.");
+    }
   }
 
-  function handleAdd(title: string, description: string): void {
-    const newTask: Task = {
-      id: crypto.randomUUID(),
-      userId: "user1",
+  async function handleAdd(title: string, description: string): Promise<void> {
+    if (!user) {
+      setError("No hay sesión activa. Volvé a iniciar sesión.");
+      return;
+    }
+    const temporaryTask: Task = {
+      id: `temp-${Date.now()}`,
+      userId: user.uid,
       title,
       description,
       completed: false,
-      createdAt: new Date(),
+      createdAt: Timestamp.now(),
     };
-    setTasks((prev) => [newTask, ...prev]);
+
+    setError(null);
+    setTasks((prev) => [temporaryTask, ...prev]);
+    console.log("Tarea temporal creada:", temporaryTask);
     setShowAddForm(false);
+
+    try {
+      const created = await createTask({ userId: user.uid, title, description });
+      setTasks((prev) =>
+        prev.map((task) => (task.id === temporaryTask.id ? created : task))
+      );
+    } catch (e) {
+      setTasks((prev) => prev.filter((task) => task.id !== temporaryTask.id));
+      setError(e instanceof Error ? e.message : "No se pudo crear la tarea.");
+    }
   }
 
   function handleEdit(task: Task): void {
@@ -41,28 +98,41 @@ function TasksPage(): JSX.Element {
     setShowAddForm(false);
   }
 
-  function handleUpdate(title: string, description: string): void {
-    setTasks((prev) =>
-      prev.map((task) =>
-        task.id === editingTask!.id ? { ...task, title, description } : task
-      )
-    );
-    setEditingTask(null);
+  async function handleUpdate(title: string, description: string): Promise<void> {
+    if (!editingTask) return;
+    try {
+      await updateTask(editingTask.id, { title, description });
+      setTasks((prev) =>
+        prev.map((t) => (t.id === editingTask.id ? { ...t, title, description } : t))
+      );
+      setEditingTask(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo actualizar la tarea.");
+    }
   }
 
   function handleDelete(id: string): void {
     setDeletingTaskId(id);
   }
 
-  function handleConfirmDelete(): void {
-    setTasks((prev) => prev.filter((task) => task.id !== deletingTaskId));
-    setDeletingTaskId(null);
+  async function handleConfirmDelete(): Promise<void> {
+    if (!deletingTaskId) return;
+    try {
+      await deleteTask(deletingTaskId);
+      setTasks((prev) => prev.filter((t) => t.id !== deletingTaskId));
+      setDeletingTaskId(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "No se pudo eliminar la tarea.");
+      setDeletingTaskId(null);
+    }
   }
 
   function handleCancel(): void {
     setShowAddForm(false);
     setEditingTask(null);
   }
+
+  if (loading) return <div>Cargando tareas...</div>;
 
   return (
     <div className={styles.container}>
@@ -74,6 +144,13 @@ function TasksPage(): JSX.Element {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className={styles.error}>
+          <span>{error}</span>
+          <button onClick={() => setError(null)}>✕</button>
+        </div>
+      )}
 
       {showAddForm && (
         <TaskForm onSubmit={handleAdd} onCancel={handleCancel} />
