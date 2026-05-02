@@ -3,7 +3,7 @@ import type { JSX } from "react";
 import styles from "./taskForm.module.css";
 
 interface TaskFormProps {
-  onSubmit: (title: string, description: string) => void;
+  onSubmit: (title: string, description: string) => void | Promise<void>;
   onCancel: () => void;
   initialTitle?: string;
   initialDescription?: string;
@@ -21,11 +21,18 @@ function TaskForm({
 }: TaskFormProps): JSX.Element {
   const [title, setTitle] = useState(initialTitle);
   const [description, setDescription] = useState(initialDescription);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  function handleSubmit(e: { preventDefault(): void }): void {
+  async function handleSubmit(e: { preventDefault(): void }): Promise<void> {
     e.preventDefault();
-    if (!title.trim()) return;
-    onSubmit(title.trim(), description.trim());
+    if (!title.trim() || isSubmitting) return;
+
+    setIsSubmitting(true);
+    try {
+      await onSubmit(title.trim(), description.trim());
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -54,11 +61,20 @@ function TaskForm({
         />
       </div>
       <div className={styles.actions}>
-        <button className={styles.cancelButton} type="button" onClick={onCancel}>
+        <button
+          className={styles.cancelButton}
+          type="button"
+          onClick={onCancel}
+          disabled={isSubmitting}
+        >
           Cancelar
         </button>
-        <button className={styles.submitButton} type="submit" disabled={!title.trim()}>
-          {submitLabel}
+        <button
+          className={styles.submitButton}
+          type="submit"
+          disabled={!title.trim() || isSubmitting}
+        >
+          {isSubmitting ? "Guardando..." : submitLabel}
         </button>
       </div>
     </form>

@@ -8,7 +8,7 @@ import {
   type User,
   type UserCredential,
 } from "firebase/auth";
-import { auth } from "../../services/firebase";
+import { auth } from "../../services/firebase.config";
 import type { JSX } from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 

@@ -12,9 +12,6 @@ export function validatePassword(password: string): string {
   return "";
 }
 
-export function validateAuthFields(email: string, password: string): string {
-  return validateEmail(email) || validatePassword(password);
-}
 
 interface FirebaseAuthError {
   code: string;
