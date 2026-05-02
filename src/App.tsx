@@ -9,7 +9,7 @@ import Contact from "./pages/Contact";
 import LoginPag from "./pages/LoginPag";
 import Register from "./pages/Register";
 import TasksPage from "./pages/TasksPage";
-// import ProtectedRoute from "./routes/ProtectedRoute";
+import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App(): JSX.Element {
 
@@ -23,8 +23,7 @@ function App(): JSX.Element {
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<LoginPag />} />
           <Route path="/register" element={<Register />} />
-          {/* TODO: restaurar ProtectedRoute cuando Firebase esté listo */}
-          <Route path="/tasks" element={<TasksPage />} />
+          <Route path="/tasks" element={<ProtectedRoute><TasksPage /></ProtectedRoute>} />
         </Route>
       </Routes>
       <Footer />
