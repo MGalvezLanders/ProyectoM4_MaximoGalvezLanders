@@ -9,7 +9,14 @@ interface TaskCardProps {
   onDelete: (id: string) => void;
 }
 
+function formatTaskDate(createdAt: Task["createdAt"]): string {
+  if (!createdAt || typeof createdAt.toDate !== "function") return "";
+  return createdAt.toDate().toLocaleDateString("es-AR");
+}
+
 function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Element {
+  const formattedDate = formatTaskDate(task.createdAt);
+
   return (
     <div className={`${styles.taskCard} ${task.completed ? styles.completed : ""}`}>
       <div className={styles.topRow}>
@@ -24,9 +31,7 @@ function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Elem
           {task.description && (
             <p className={styles.taskDescription}>{task.description}</p>
           )}
-          <span className={styles.date}>
-            {new Date(task.createdAt).toLocaleDateString("es-AR")}
-          </span>
+          {formattedDate && <span className={styles.date}>{formattedDate}</span>}
         </div>
       </div>
       <div className={styles.actions}>
