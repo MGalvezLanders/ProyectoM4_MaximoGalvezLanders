@@ -1,3 +1,4 @@
+import { Timestamp } from "firebase/firestore";
 import type { Task } from "../types/task";
 
 export const MOCK_TASKS: Task[] = [
@@ -7,7 +8,7 @@ export const MOCK_TASKS: Task[] = [
     title: "Aprender React Router",
     description: "Estudiar rutas anidadas y rutas protegidas.",
     completed: true,
-    createdAt: new Date("2024-04-20"),
+    createdAt: Timestamp.fromDate(new Date("2024-04-20")),
   },
   {
     id: "2",
@@ -15,7 +16,7 @@ export const MOCK_TASKS: Task[] = [
     title: "Configurar Firebase",
     description: "Crear proyecto y conectar autenticación.",
     completed: false,
-    createdAt: new Date("2024-04-22"),
+    createdAt: Timestamp.fromDate(new Date("2024-04-22")),
   },
   {
     id: "3",
@@ -23,6 +24,6 @@ export const MOCK_TASKS: Task[] = [
     title: "Diseñar componentes",
     description: "",
     completed: false,
-    createdAt: new Date("2024-04-25"),
+    createdAt: Timestamp.fromDate(new Date("2024-04-25")),
   },
 ];
