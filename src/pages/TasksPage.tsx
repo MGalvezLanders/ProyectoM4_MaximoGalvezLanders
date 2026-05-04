@@ -7,6 +7,7 @@ import { getTasks, createTask, updateTask, toggleTask, deleteTask } from "../ser
 import TaskList from "../components/TaskList/taskList";
 import TaskForm from "../components/TaskForm/taskForm";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
+import TodoSummarySection from "../components/buildSummary/TodoSummarySection";
 import styles from "./TasksPage.module.css";
 
 function TasksPage(): JSX.Element {
@@ -181,6 +182,8 @@ function TasksPage(): JSX.Element {
         onEdit={handleEdit}
         onDelete={handleDelete}
       />
+
+      <TodoSummarySection tasks={tasks} />
     </div>
   );
 }
