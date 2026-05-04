@@ -25,3 +25,4 @@ Presentación de PI M4.pdf
 *.njsproj
 *.sln
 *.sw?
+.vercel
