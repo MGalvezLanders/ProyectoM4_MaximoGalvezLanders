@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Task } from "../../types/task";
 import styles from "./BuildTodoSummary.module.css";
 

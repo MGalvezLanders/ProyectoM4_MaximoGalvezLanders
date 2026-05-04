@@ -1,4 +1,3 @@
-import React from "react";
 import type { Task } from "../../types/task";
 import { useAuth } from "../../features/auth/Authenticator";
 import EmailSummaryButton from "./BuildTodoSummary";
