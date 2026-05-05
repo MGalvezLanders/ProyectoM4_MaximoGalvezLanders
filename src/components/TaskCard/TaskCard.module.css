@@ -74,6 +74,14 @@
   flex-direction: column;
   gap: var(--space-xs);
   flex: 1;
+  min-width: 0;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
 .taskTitle {
@@ -83,6 +91,30 @@
   margin: 0;
 }
 
+.priorityBadge {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.priority_high {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.priority_medium {
+  background: #fffbeb;
+  color: #d97706;
+}
+
+.priority_low {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
 .taskDescription {
   font-size: var(--font-size-sm);
   color: var(--color-text-secondary);
@@ -90,9 +122,26 @@
   line-height: 1.5;
 }
 
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  align-items: center;
+}
+
 .date {
   font-size: var(--font-size-xs);
   color: var(--color-text-disabled);
+}
+
+.dueDate {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-disabled);
+}
+
+.overdue {
+  color: #dc2626;
+  font-weight: 600;
 }
 
 .actions {

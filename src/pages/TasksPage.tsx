@@ -4,16 +4,38 @@ import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, us
 import type { DragEndEvent } from "@dnd-kit/core";
 import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Timestamp } from "firebase/firestore";
-import type { Task } from "../types/task";
+import type { Task, Priority } from "../types/task";
 import { useAuth } from "../features/auth/Authenticator";
 import { getTasks, createTask, updateTask, toggleTask, deleteTask } from "../services/taskService";
 import TaskList from "../components/TaskList/taskList";
 import TaskForm from "../components/TaskForm/taskForm";
+import type { TaskFormData } from "../components/TaskForm/taskForm";
 import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import TodoSummarySection from "../components/buildSummary/TodoSummarySection";
 import styles from "./TasksPage.module.css";
 
 type FilterType = "all" | "pending" | "completed";
+type SortType = "custom" | "priority" | "dueDate";
+
+const FILTER_LABELS: Record<FilterType, string> = {
+  all: "Todas",
+  pending: "Pendientes",
+  completed: "Completadas",
+};
+
+const SORT_LABELS: Record<SortType, string> = {
+  custom: "Personalizado",
+  priority: "Prioridad",
+  dueDate: "Fecha de vencimiento",
+};
+
+const EMPTY_MESSAGES: Record<FilterType, string> = {
+  all: "No tenés tareas todavía. ¡Creá una!",
+  pending: "No hay tareas pendientes.",
+  completed: "No hay tareas completadas.",
+};
+
+const PRIORITY_ORDER: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 function applyStoredOrder(tasks: Task[], userId: string): Task[] {
   try {
@@ -33,22 +55,11 @@ function applyStoredOrder(tasks: Task[], userId: string): Task[] {
   }
 }
 
-const FILTER_LABELS: Record<FilterType, string> = {
-  all: "Todas",
-  pending: "Pendientes",
-  completed: "Completadas",
-};
-
-const EMPTY_MESSAGES: Record<FilterType, string> = {
-  all: "No tenés tareas todavía. ¡Creá una!",
-  pending: "No hay tareas pendientes.",
-  completed: "No hay tareas completadas.",
-};
-
 function TasksPage(): JSX.Element {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [filter, setFilter] = useState<FilterType>("all");
+  const [sortBy, setSortBy] = useState<SortType>("custom");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -60,11 +71,26 @@ function TasksPage(): JSX.Element {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
-  const filteredTasks = tasks.filter((t) => {
-    if (filter === "pending") return !t.completed;
-    if (filter === "completed") return t.completed;
-    return true;
-  });
+  const filteredAndSortedTasks = (() => {
+    const filtered = tasks.filter((t) => {
+      if (filter === "pending") return !t.completed;
+      if (filter === "completed") return t.completed;
+      return true;
+    });
+    if (sortBy === "priority") {
+      return [...filtered].sort(
+        (a, b) => PRIORITY_ORDER[a.priority ?? "medium"] - PRIORITY_ORDER[b.priority ?? "medium"]
+      );
+    }
+    if (sortBy === "dueDate") {
+      return [...filtered].sort((a, b) => {
+        const aMs = a.dueDate?.toDate().getTime() ?? Infinity;
+        const bMs = b.dueDate?.toDate().getTime() ?? Infinity;
+        return aMs - bMs;
+      });
+    }
+    return filtered;
+  })();
 
   const formVisible = showAddForm || editingTask !== null;
 
@@ -111,11 +137,14 @@ function TasksPage(): JSX.Element {
     }
   }
 
-  async function handleAdd(title: string, description: string): Promise<void> {
+  async function handleAdd({ title, description, dueDate, priority }: TaskFormData): Promise<void> {
     if (!user) {
       setError("No hay sesión activa. Volvé a iniciar sesión.");
       return;
     }
+    const oneMonthFromNow = new Date();
+    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
     const temporaryTask: Task = {
       id: `temp-${Date.now()}`,
       userId: user.uid,
@@ -123,15 +152,16 @@ function TasksPage(): JSX.Element {
       description,
       completed: false,
       createdAt: Timestamp.now(),
+      dueDate: dueDate ? Timestamp.fromDate(dueDate) : Timestamp.fromDate(oneMonthFromNow),
+      priority,
     };
 
     setError(null);
     setTasks((prev) => [temporaryTask, ...prev]);
-    console.log("Tarea temporal creada:", temporaryTask);
     setShowAddForm(false);
 
     try {
-      const created = await createTask({ userId: user.uid, title, description });
+      const created = await createTask({ userId: user.uid, title, description, dueDate, priority });
       setTasks((prev) =>
         prev.map((task) => (task.id === temporaryTask.id ? created : task))
       );
@@ -146,12 +176,15 @@ function TasksPage(): JSX.Element {
     setShowAddForm(false);
   }
 
-  async function handleUpdate(title: string, description: string): Promise<void> {
+  async function handleUpdate({ title, description, dueDate, priority }: TaskFormData): Promise<void> {
     if (!editingTask) return;
+    const dueDateTs = dueDate ? Timestamp.fromDate(dueDate) : editingTask.dueDate;
     try {
-      await updateTask(editingTask.id, { title, description });
+      await updateTask(editingTask.id, { title, description, dueDate: dueDateTs, priority });
       setTasks((prev) =>
-        prev.map((t) => (t.id === editingTask.id ? { ...t, title, description } : t))
+        prev.map((t) =>
+          t.id === editingTask.id ? { ...t, title, description, dueDate: dueDateTs, priority } : t
+        )
       );
       setEditingTask(null);
     } catch (e) {
@@ -225,6 +258,8 @@ function TasksPage(): JSX.Element {
         <TaskForm
           initialTitle={editingTask.title}
           initialDescription={editingTask.description}
+          initialDueDate={editingTask.dueDate?.toDate() ?? null}
+          initialPriority={editingTask.priority ?? "medium"}
           formTitle="Editar tarea"
           submitLabel="Guardar cambios"
           onSubmit={handleUpdate}
@@ -240,25 +275,40 @@ function TasksPage(): JSX.Element {
         />
       )}
 
-      <div className={styles.filterBar}>
-        {(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
-          <button
-            key={f}
-            className={`${styles.filterButton} ${filter === f ? styles.filterButtonActive : ""}`}
-            onClick={() => setFilter(f)}
-          >
-            {FILTER_LABELS[f]}
-          </button>
-        ))}
+      <div className={styles.toolbar}>
+        <div className={styles.filterBar}>
+          {(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
+            <button
+              key={f}
+              className={`${styles.filterButton} ${filter === f ? styles.filterButtonActive : ""}`}
+              onClick={() => setFilter(f)}
+            >
+              {FILTER_LABELS[f]}
+            </button>
+          ))}
+        </div>
+        <div className={styles.sortBar}>
+          <span className={styles.sortLabel}>Ordenar:</span>
+          {(Object.keys(SORT_LABELS) as SortType[]).map((s) => (
+            <button
+              key={s}
+              className={`${styles.filterButton} ${sortBy === s ? styles.filterButtonActive : ""}`}
+              onClick={() => setSortBy(s)}
+            >
+              {SORT_LABELS[s]}
+            </button>
+          ))}
+        </div>
       </div>
 
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <TaskList
-          tasks={filteredTasks}
+          tasks={filteredAndSortedTasks}
           onToggle={handleToggle}
           onEdit={handleEdit}
           onDelete={handleDelete}
           emptyMessage={EMPTY_MESSAGES[filter]}
+          sortable={sortBy === "custom"}
         />
       </DndContext>
 

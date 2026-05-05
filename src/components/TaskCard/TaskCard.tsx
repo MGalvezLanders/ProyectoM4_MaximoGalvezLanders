@@ -1,24 +1,36 @@
 import type { JSX } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import type { Task } from "../../types/task";
+import type { Task, Priority } from "../../types/task";
 import styles from "./TaskCard.module.css";
+
+const PRIORITY_LABELS: Record<Priority, string> = {
+  high: "Alta",
+  medium: "Media",
+  low: "Baja",
+};
 
 interface TaskCardProps {
   task: Task;
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  sortable?: boolean;
 }
 
-function formatTaskDate(createdAt: Task["createdAt"]): string {
-  if (!createdAt || typeof createdAt.toDate !== "function") return "";
-  return createdAt.toDate().toLocaleDateString("es-AR");
+function formatDate(ts: Task["createdAt"] | Task["dueDate"]): string {
+  if (!ts || typeof ts.toDate !== "function") return "";
+  return ts.toDate().toLocaleDateString("es-AR");
 }
 
-function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Element {
-  const formattedDate = formatTaskDate(task.createdAt);
+function isOverdue(task: Task): boolean {
+  if (task.completed || !task.dueDate || typeof task.dueDate.toDate !== "function") return false;
+  return task.dueDate.toDate() < new Date();
+}
+
+function TaskCard({ task, onToggle, onEdit, onDelete, sortable = true }: TaskCardProps): JSX.Element {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
+  const overdue = isOverdue(task);
 
   return (
     <div
@@ -27,14 +39,16 @@ function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Elem
       className={`${styles.taskCard} ${task.completed ? styles.completed : ""} ${isDragging ? styles.dragging : ""}`}
     >
       <div className={styles.topRow}>
-        <button
-          className={styles.dragHandle}
-          {...attributes}
-          {...listeners}
-          aria-label="Arrastrar tarea"
-        >
-          ⠿
-        </button>
+        {sortable && (
+          <button
+            className={styles.dragHandle}
+            {...attributes}
+            {...listeners}
+            aria-label="Arrastrar tarea"
+          >
+            ⠿
+          </button>
+        )}
         <input
           className={styles.checkbox}
           type="checkbox"
@@ -42,11 +56,25 @@ function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Elem
           onChange={() => onToggle(task.id)}
         />
         <div className={styles.content}>
-          <h2 className={styles.taskTitle}>{task.title}</h2>
+          <div className={styles.titleRow}>
+            <h2 className={styles.taskTitle}>{task.title}</h2>
+            {task.priority && (
+              <span className={`${styles.priorityBadge} ${styles[`priority_${task.priority}`]}`}>
+                {PRIORITY_LABELS[task.priority]}
+              </span>
+            )}
+          </div>
           {task.description && (
             <p className={styles.taskDescription}>{task.description}</p>
           )}
-          {formattedDate && <span className={styles.date}>{formattedDate}</span>}
+          <div className={styles.meta}>
+            <span className={styles.date}>{formatDate(task.createdAt)}</span>
+            {task.dueDate && (
+              <span className={`${styles.dueDate} ${overdue ? styles.overdue : ""}`}>
+                {overdue ? "⚠ Vencida:" : "Vence:"} {formatDate(task.dueDate)}
+              </span>
+            )}
+          </div>
         </div>
       </div>
       <div className={styles.actions}>

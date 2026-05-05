@@ -10,9 +10,10 @@ interface TaskListProps {
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
   emptyMessage?: string;
+  sortable?: boolean;
 }
 
-function TaskList({ tasks, onToggle, onEdit, onDelete, emptyMessage = "No tenés tareas todavía. ¡Creá una!" }: TaskListProps): JSX.Element {
+function TaskList({ tasks, onToggle, onEdit, onDelete, emptyMessage = "No tenés tareas todavía. ¡Creá una!", sortable = true }: TaskListProps): JSX.Element {
   if (tasks.length === 0) {
     return <p className={styles.empty}>{emptyMessage}</p>;
   }
@@ -27,6 +28,7 @@ function TaskList({ tasks, onToggle, onEdit, onDelete, emptyMessage = "No tenés
               onToggle={onToggle}
               onEdit={onEdit}
               onDelete={onDelete}
+              sortable={sortable}
             />
           </li>
         ))}

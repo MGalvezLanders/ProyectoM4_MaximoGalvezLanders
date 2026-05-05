@@ -65,9 +65,30 @@
   flex-shrink: 0;
 }
 
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
 .filterBar {
   display: flex;
   gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.sortBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.sortLabel {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  white-space: nowrap;
 }
 
 .filterButton {

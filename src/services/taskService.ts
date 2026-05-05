@@ -9,6 +9,7 @@ import {
   query,
   where,
   serverTimestamp,
+  Timestamp,
 } from "firebase/firestore";
 
 import { db } from "./firebase.config";
@@ -32,12 +33,19 @@ export async function getTasks(userId: string): Promise<Task[]> {
 
 export async function createTask(input: NewTaskInput): Promise<Task> {
   try {
+    const oneMonthFromNow = new Date();
+    oneMonthFromNow.setMonth(oneMonthFromNow.getMonth() + 1);
+
     const taskData = {
       userId: input.userId,
       title: input.title,
       description: input.description ?? "",
       completed: false,
       createdAt: serverTimestamp(),
+      dueDate: input.dueDate
+        ? Timestamp.fromDate(input.dueDate)
+        : Timestamp.fromDate(oneMonthFromNow),
+      priority: input.priority ?? "medium",
     };
     const docRef = await addDoc(collection(db, TASKS_COLLECTION), taskData);
     const snapshot = await getDoc(docRef);
@@ -49,7 +57,7 @@ export async function createTask(input: NewTaskInput): Promise<Task> {
 
 export async function updateTask(
   id: string,
-  data: Partial<Pick<Task, "title" | "description" | "completed">>,
+  data: Partial<Pick<Task, "title" | "description" | "completed" | "dueDate" | "priority">>,
 ): Promise<void> {
   try {
     await updateDoc(doc(db, TASKS_COLLECTION, id), data);
