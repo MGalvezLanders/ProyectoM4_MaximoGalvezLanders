@@ -71,4 +71,74 @@ describe('TaskCard', () => {
     render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
     expect(screen.getByRole('button', { name: /eliminar/i })).toBeEnabled()
   })
+
+  // --- Nuevos: prioridad ---
+
+  it('muestra el badge de prioridad Alta', () => {
+    const task = { ...baseTask, priority: 'high' as const }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText('Alta')).toBeInTheDocument()
+  })
+
+  it('muestra el badge de prioridad Media', () => {
+    const task = { ...baseTask, priority: 'medium' as const }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText('Media')).toBeInTheDocument()
+  })
+
+  it('muestra el badge de prioridad Baja', () => {
+    const task = { ...baseTask, priority: 'low' as const }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText('Baja')).toBeInTheDocument()
+  })
+
+  it('no muestra badge de prioridad cuando priority es undefined', () => {
+    render(<TaskCard task={baseTask} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.queryByText('Alta')).not.toBeInTheDocument()
+    expect(screen.queryByText('Media')).not.toBeInTheDocument()
+    expect(screen.queryByText('Baja')).not.toBeInTheDocument()
+  })
+
+  // --- Nuevos: fecha de vencimiento ---
+
+  it('muestra "Vence:" cuando hay una fecha de vencimiento futura', () => {
+    const task = { ...baseTask, dueDate: Timestamp.fromDate(new Date('2099-12-31')) }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText(/vence:/i)).toBeInTheDocument()
+  })
+
+  it('no muestra fecha de vencimiento cuando dueDate es undefined', () => {
+    render(<TaskCard task={baseTask} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.queryByText(/vence:/i)).not.toBeInTheDocument()
+  })
+
+  it('muestra indicador "⚠ Vencida:" para tareas pendientes con fecha pasada', () => {
+    const task = { ...baseTask, dueDate: Timestamp.fromDate(new Date('2000-01-01')) }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByText(/⚠ vencida:/i)).toBeInTheDocument()
+  })
+
+  it('no muestra indicador de vencida si la tarea está completada aunque la fecha haya pasado', () => {
+    const task = {
+      ...baseTask,
+      completed: true,
+      dueDate: Timestamp.fromDate(new Date('2000-01-01')),
+    }
+    render(<TaskCard task={task} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.queryByText(/⚠ vencida:/i)).not.toBeInTheDocument()
+  })
+
+  // --- Nuevos: drag handle ---
+
+  it('muestra el drag handle por defecto (sortable=true)', () => {
+    render(<TaskCard task={baseTask} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    expect(screen.getByRole('button', { name: /arrastrar tarea/i })).toBeInTheDocument()
+  })
+
+  it('oculta el drag handle cuando sortable es false', () => {
+    render(
+      <TaskCard task={baseTask} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} sortable={false} />
+    )
+    expect(screen.queryByRole('button', { name: /arrastrar tarea/i })).not.toBeInTheDocument()
+  })
 })

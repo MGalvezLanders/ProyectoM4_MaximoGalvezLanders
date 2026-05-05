@@ -33,4 +33,34 @@ describe('TaskList', () => {
     render(<TaskList tasks={tasks} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
     expect(screen.queryByText(/no tenés tareas todavía/i)).not.toBeInTheDocument()
   })
+
+  // --- Nuevos ---
+
+  it('muestra el mensaje de vacío personalizado via emptyMessage', () => {
+    render(
+      <TaskList
+        tasks={[]}
+        onToggle={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        emptyMessage="No hay tareas pendientes."
+      />
+    )
+    expect(screen.getByText('No hay tareas pendientes.')).toBeInTheDocument()
+  })
+
+  it('muestra el drag handle en cada tarjeta cuando sortable=true (default)', () => {
+    const tasks = makeTasks(2)
+    render(<TaskList tasks={tasks} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} />)
+    const handles = screen.getAllByRole('button', { name: /arrastrar tarea/i })
+    expect(handles).toHaveLength(2)
+  })
+
+  it('oculta el drag handle en todas las tarjetas cuando sortable=false', () => {
+    const tasks = makeTasks(2)
+    render(
+      <TaskList tasks={tasks} onToggle={vi.fn()} onEdit={vi.fn()} onDelete={vi.fn()} sortable={false} />
+    )
+    expect(screen.queryAllByRole('button', { name: /arrastrar tarea/i })).toHaveLength(0)
+  })
 })

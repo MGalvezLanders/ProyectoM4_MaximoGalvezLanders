@@ -50,6 +50,69 @@ describe('buildTodoSummary', () => {
     expect(result).toContain('Pendientes (0)')
     expect(result).toContain('Completadas (0)')
   })
+
+  // --- Nuevos: prioridad ---
+
+  it('incluye [Alta] cuando la tarea tiene priority high', () => {
+    const tasks = [{ ...makeTask('1', 'Urgente', false), priority: 'high' as const }]
+    const result = buildTodoSummary(tasks)
+    expect(result).toContain('[Alta]')
+  })
+
+  it('incluye [Media] cuando la tarea tiene priority medium', () => {
+    const tasks = [{ ...makeTask('1', 'Normal', false), priority: 'medium' as const }]
+    const result = buildTodoSummary(tasks)
+    expect(result).toContain('[Media]')
+  })
+
+  it('incluye [Baja] cuando la tarea tiene priority low', () => {
+    const tasks = [{ ...makeTask('1', 'Opcional', false), priority: 'low' as const }]
+    const result = buildTodoSummary(tasks)
+    expect(result).toContain('[Baja]')
+  })
+
+  it('no incluye brackets de prioridad cuando priority es undefined', () => {
+    const tasks = [makeTask('1', 'Sin prioridad', false)]
+    const result = buildTodoSummary(tasks)
+    expect(result).not.toContain('[Alta]')
+    expect(result).not.toContain('[Media]')
+    expect(result).not.toContain('[Baja]')
+  })
+
+  // --- Nuevos: fecha de vencimiento ---
+
+  it('incluye "vence:" cuando la tarea tiene dueDate', () => {
+    const tasks = [{
+      ...makeTask('1', 'Con fecha', false),
+      dueDate: Timestamp.fromDate(new Date('2099-12-31')),
+    }]
+    const result = buildTodoSummary(tasks)
+    expect(result).toContain('vence:')
+  })
+
+  it('no incluye "vence:" cuando la tarea no tiene dueDate', () => {
+    const tasks = [makeTask('1', 'Sin fecha', false)]
+    const result = buildTodoSummary(tasks)
+    expect(result).not.toContain('vence:')
+  })
+
+  it('marca con ⚠ VENCIDA las tareas pendientes con fecha pasada', () => {
+    const tasks = [{
+      ...makeTask('1', 'Tarea vencida', false),
+      dueDate: Timestamp.fromDate(new Date('2000-01-01')),
+    }]
+    const result = buildTodoSummary(tasks)
+    expect(result).toContain('VENCIDA')
+  })
+
+  it('no marca VENCIDA una tarea completada aunque la fecha haya pasado', () => {
+    const tasks = [{
+      ...makeTask('1', 'Completada atrasada', true),
+      dueDate: Timestamp.fromDate(new Date('2000-01-01')),
+    }]
+    const result = buildTodoSummary(tasks)
+    expect(result).not.toContain('VENCIDA')
+  })
 })
 
 describe('EmailSummaryButton', () => {
