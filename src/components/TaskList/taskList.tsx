@@ -1,4 +1,5 @@
 import type { JSX } from "react";
+import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import type { Task } from "../../types/task";
 import TaskCard from "../TaskCard/TaskCard";
 import styles from "./taskList.module.css";
@@ -17,18 +18,20 @@ function TaskList({ tasks, onToggle, onEdit, onDelete, emptyMessage = "No tenés
   }
 
   return (
-    <ul className={styles.list}>
-      {tasks.map((task) => (
-        <li key={task.id}>
-          <TaskCard
-            task={task}
-            onToggle={onToggle}
-            onEdit={onEdit}
-            onDelete={onDelete}
-          />
-        </li>
-      ))}
-    </ul>
+    <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+      <ul className={styles.list}>
+        {tasks.map((task) => (
+          <li key={task.id}>
+            <TaskCard
+              task={task}
+              onToggle={onToggle}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
+          </li>
+        ))}
+      </ul>
+    </SortableContext>
   );
 }
 

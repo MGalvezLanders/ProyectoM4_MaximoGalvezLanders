@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
 import type { JSX } from "react";
+import { DndContext, closestCenter, PointerSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
+import type { DragEndEvent } from "@dnd-kit/core";
+import { arrayMove, sortableKeyboardCoordinates } from "@dnd-kit/sortable";
 import { Timestamp } from "firebase/firestore";
 import type { Task } from "../types/task";
 import { useAuth } from "../features/auth/Authenticator";
@@ -11,6 +14,24 @@ import TodoSummarySection from "../components/buildSummary/TodoSummarySection";
 import styles from "./TasksPage.module.css";
 
 type FilterType = "all" | "pending" | "completed";
+
+function applyStoredOrder(tasks: Task[], userId: string): Task[] {
+  try {
+    const saved = localStorage.getItem(`taskOrder_${userId}`);
+    if (!saved) return tasks;
+    const ids: string[] = JSON.parse(saved);
+    const idToTask = new Map(tasks.map((t) => [t.id, t]));
+    const ordered = ids.flatMap((id) => {
+      const t = idToTask.get(id);
+      return t ? [t] : [];
+    });
+    const orderedSet = new Set(ids);
+    const rest = tasks.filter((t) => !orderedSet.has(t.id));
+    return [...ordered, ...rest];
+  } catch {
+    return tasks;
+  }
+}
 
 const FILTER_LABELS: Record<FilterType, string> = {
   all: "Todas",
@@ -34,6 +55,11 @@ function TasksPage(): JSX.Element {
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+
   const filteredTasks = tasks.filter((t) => {
     if (filter === "pending") return !t.completed;
     if (filter === "completed") return t.completed;
@@ -52,7 +78,7 @@ function TasksPage(): JSX.Element {
         setLoading(true);
         setError(null);
         const data = await getTasks(user!.uid);
-        if (!cancelled) setTasks(data);
+        if (!cancelled) setTasks(applyStoredOrder(data, user!.uid));
       } catch (e) {
         if (!cancelled)
           setError(e instanceof Error ? e.message : "No se pudieron cargar las tareas.");
@@ -154,6 +180,23 @@ function TasksPage(): JSX.Element {
     setEditingTask(null);
   }
 
+  function handleDragEnd(event: DragEndEvent): void {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    setTasks((prev) => {
+      const oldIndex = prev.findIndex((t) => t.id === active.id);
+      const newIndex = prev.findIndex((t) => t.id === over.id);
+      const reordered = arrayMove(prev, oldIndex, newIndex);
+      if (user) {
+        localStorage.setItem(
+          `taskOrder_${user.uid}`,
+          JSON.stringify(reordered.map((t) => t.id))
+        );
+      }
+      return reordered;
+    });
+  }
+
   if (loading) return <div>Cargando tareas...</div>;
 
   return (
@@ -209,13 +252,15 @@ function TasksPage(): JSX.Element {
         ))}
       </div>
 
-      <TaskList
-        tasks={filteredTasks}
-        onToggle={handleToggle}
-        onEdit={handleEdit}
-        onDelete={handleDelete}
-        emptyMessage={EMPTY_MESSAGES[filter]}
-      />
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <TaskList
+          tasks={filteredTasks}
+          onToggle={handleToggle}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          emptyMessage={EMPTY_MESSAGES[filter]}
+        />
+      </DndContext>
 
       <TodoSummarySection tasks={tasks} />
     </div>

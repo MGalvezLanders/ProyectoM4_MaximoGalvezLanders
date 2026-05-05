@@ -1,4 +1,6 @@
 import type { JSX } from "react";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import type { Task } from "../../types/task";
 import styles from "./TaskCard.module.css";
 
@@ -16,10 +18,23 @@ function formatTaskDate(createdAt: Task["createdAt"]): string {
 
 function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps): JSX.Element {
   const formattedDate = formatTaskDate(task.createdAt);
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
 
   return (
-    <div className={`${styles.taskCard} ${task.completed ? styles.completed : ""}`}>
+    <div
+      ref={setNodeRef}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      className={`${styles.taskCard} ${task.completed ? styles.completed : ""} ${isDragging ? styles.dragging : ""}`}
+    >
       <div className={styles.topRow}>
+        <button
+          className={styles.dragHandle}
+          {...attributes}
+          {...listeners}
+          aria-label="Arrastrar tarea"
+        >
+          ⠿
+        </button>
         <input
           className={styles.checkbox}
           type="checkbox"
