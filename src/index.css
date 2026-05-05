@@ -1,3 +1,16 @@
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  overflow-x: hidden;
+}
+
+body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
 :root {
   /* Colores */
   --color-white: #ffffff;
@@ -10,7 +23,7 @@
   --color-blue-dark: #3D70D6;
   --color-blue-light: #EBF1FD;
   --color-text-primary: #1F2937;
-  --color-text-secondary:#6B7280;
+  --color-text-secondary: #6B7280;
   --color-text-disabled: #9CA3AF;
   --color-danger: #B91C1C;
   --color-danger-light: #FEE2E2;

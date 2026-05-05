@@ -6,11 +6,19 @@
 
 .linkContainer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-sm);
-  padding: var(--space-sm) var(--space-2xl);
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-lg);
   background: var(--color-bg);
   border-bottom: 1px solid var(--color-border);
+}
+
+@media (min-width: 640px) {
+  .linkContainer {
+    gap: var(--space-sm);
+    padding: var(--space-sm) var(--space-2xl);
+  }
 }
 
 .link {
@@ -38,6 +46,13 @@
 
 .mainContent {
   flex: 1;
-  padding: var(--space-2xl);
+  padding: var(--space-lg);
   background: var(--color-bg);
+  min-width: 0;
+}
+
+@media (min-width: 640px) {
+  .mainContent {
+    padding: var(--space-2xl);
+  }
 }

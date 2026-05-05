@@ -1,5 +1,6 @@
 .wrapper {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--space-md);
   padding-top: var(--space-lg);
@@ -16,6 +17,7 @@
   font-weight: 600;
   cursor: pointer;
   transition: background var(--transition);
+  white-space: nowrap;
 }
 
 .button:hover:not(:disabled) {

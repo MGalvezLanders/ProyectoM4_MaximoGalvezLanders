@@ -5,7 +5,13 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
-  padding: var(--space-xl);
+  padding: var(--space-lg);
+}
+
+@media (min-width: 480px) {
+  .form {
+    padding: var(--space-xl);
+  }
 }
 
 .formTitle {
@@ -37,7 +43,6 @@
   color: var(--color-text-primary);
   background: var(--color-bg);
   transition: border-color var(--transition);
-  box-sizing: border-box;
   font-family: inherit;
 }
 
@@ -54,12 +59,20 @@
 
 .actions {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   gap: var(--space-sm);
   margin-top: var(--space-xs);
 }
 
+@media (min-width: 480px) {
+  .actions {
+    flex-direction: row;
+    justify-content: flex-end;
+  }
+}
+
 .cancelButton {
+  width: 100%;
   padding: var(--space-sm) var(--space-lg);
   border-radius: var(--radius-md);
   border: 1px solid var(--color-border);
@@ -70,11 +83,18 @@
   transition: background var(--transition);
 }
 
+@media (min-width: 480px) {
+  .cancelButton {
+    width: auto;
+  }
+}
+
 .cancelButton:hover {
   background: var(--color-task-bg);
 }
 
 .submitButton {
+  width: 100%;
   padding: var(--space-sm) var(--space-xl);
   background: var(--color-blue);
   color: var(--color-white);
@@ -84,6 +104,12 @@
   font-weight: 600;
   cursor: pointer;
   transition: background var(--transition), opacity var(--transition);
+}
+
+@media (min-width: 480px) {
+  .submitButton {
+    width: auto;
+  }
 }
 
 .submitButton:hover:not(:disabled) {

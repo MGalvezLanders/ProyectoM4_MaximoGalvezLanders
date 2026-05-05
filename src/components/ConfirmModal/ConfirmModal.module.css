@@ -5,6 +5,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: var(--space-lg);
   z-index: 200;
 }
 
@@ -12,13 +13,19 @@
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-xl);
-  padding: var(--space-2xl);
+  padding: var(--space-xl);
   width: 100%;
   max-width: 360px;
   display: flex;
   flex-direction: column;
   gap: var(--space-xl);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+@media (min-width: 480px) {
+  .dialog {
+    padding: var(--space-2xl);
+  }
 }
 
 .message {
@@ -60,10 +67,9 @@
   font-size: var(--font-size-sm);
   font-weight: 600;
   cursor: pointer;
-  transition: background var(--transition);
+  transition: filter var(--transition);
 }
 
 .confirmButton:hover {
-  background: var(--color-danger);
   filter: brightness(0.9);
 }
