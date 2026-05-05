@@ -7,24 +7,39 @@ interface Props {
   userEmail: string;
 }
 
+const PRIORITY_LABELS = { high: "Alta", medium: "Media", low: "Baja" } as const;
+
 export function buildTodoSummary(todos: Task[]): string {
   const pendientes = todos.filter((t) => !t.completed);
   const completadas = todos.filter((t) => t.completed);
+  const now = new Date();
 
-  const formatDate = (ts: Task["createdAt"]) =>
-    ts.toDate().toLocaleDateString("es-AR", {
+  const formatDate = (ts: Task["createdAt"] | Task["dueDate"]) => {
+    if (!ts || typeof ts.toDate !== "function") return null;
+    return ts.toDate().toLocaleDateString("es-AR", {
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
     });
+  };
 
-  const formatList = (tasks: Task[]) =>
+  const formatList = (tasks: Task[], showOverdue: boolean) =>
     tasks.length === 0
       ? "  (ninguna)\n"
       : tasks
           .map((t) => {
+            const priority = t.priority ? `[${PRIORITY_LABELS[t.priority]}]` : "";
+            const dueDateStr = formatDate(t.dueDate);
+            const isOverdue =
+              showOverdue &&
+              t.dueDate &&
+              typeof t.dueDate.toDate === "function" &&
+              t.dueDate.toDate() < now;
+            const duePart = dueDateStr
+              ? ` | vence: ${dueDateStr}${isOverdue ? " ⚠ VENCIDA" : ""}`
+              : "";
             const desc = t.description ? `\n     ${t.description}` : "";
-            return `  - ${t.title} (creada: ${formatDate(t.createdAt)})${desc}`;
+            return `  - ${t.title} ${priority} (creada: ${formatDate(t.createdAt)}${duePart})${desc}`;
           })
           .join("\n") + "\n";
 
@@ -32,9 +47,9 @@ export function buildTodoSummary(todos: Task[]): string {
     `Resumen de tareas — ${new Date().toLocaleDateString("es-AR")}\n` +
     `${"=".repeat(45)}\n\n` +
     `Pendientes (${pendientes.length}):\n` +
-    formatList(pendientes) +
+    formatList(pendientes, true) +
     `\nCompletadas (${completadas.length}):\n` +
-    formatList(completadas)
+    formatList(completadas, false)
   );
 }
 
