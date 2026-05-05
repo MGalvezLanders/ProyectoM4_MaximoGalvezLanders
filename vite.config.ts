@@ -1,5 +1,5 @@
 import 'dotenv/config'
-import { defineConfig } from 'vite'
+import { defineConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 import { SESClient, SendEmailCommand } from '@aws-sdk/client-ses'
 import type { Plugin } from 'vite'
@@ -82,4 +82,10 @@ function sendEmailDevPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [react(), sendEmailDevPlugin()],
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./test/setup.ts'],
+    include: ['test/**/*.test.{ts,tsx}'],
+  },
 })
