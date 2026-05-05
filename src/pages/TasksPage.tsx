@@ -10,14 +10,35 @@ import ConfirmModal from "../components/ConfirmModal/ConfirmModal";
 import TodoSummarySection from "../components/buildSummary/TodoSummarySection";
 import styles from "./TasksPage.module.css";
 
+type FilterType = "all" | "pending" | "completed";
+
+const FILTER_LABELS: Record<FilterType, string> = {
+  all: "Todas",
+  pending: "Pendientes",
+  completed: "Completadas",
+};
+
+const EMPTY_MESSAGES: Record<FilterType, string> = {
+  all: "No tenés tareas todavía. ¡Creá una!",
+  pending: "No hay tareas pendientes.",
+  completed: "No hay tareas completadas.",
+};
+
 function TasksPage(): JSX.Element {
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [filter, setFilter] = useState<FilterType>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddForm, setShowAddForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTaskId, setDeletingTaskId] = useState<string | null>(null);
+
+  const filteredTasks = tasks.filter((t) => {
+    if (filter === "pending") return !t.completed;
+    if (filter === "completed") return t.completed;
+    return true;
+  });
 
   const formVisible = showAddForm || editingTask !== null;
 
@@ -176,11 +197,24 @@ function TasksPage(): JSX.Element {
         />
       )}
 
+      <div className={styles.filterBar}>
+        {(Object.keys(FILTER_LABELS) as FilterType[]).map((f) => (
+          <button
+            key={f}
+            className={`${styles.filterButton} ${filter === f ? styles.filterButtonActive : ""}`}
+            onClick={() => setFilter(f)}
+          >
+            {FILTER_LABELS[f]}
+          </button>
+        ))}
+      </div>
+
       <TaskList
-        tasks={tasks}
+        tasks={filteredTasks}
         onToggle={handleToggle}
         onEdit={handleEdit}
         onDelete={handleDelete}
+        emptyMessage={EMPTY_MESSAGES[filter]}
       />
 
       <TodoSummarySection tasks={tasks} />

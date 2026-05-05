@@ -8,11 +8,12 @@ interface TaskListProps {
   onToggle: (id: string) => void;
   onEdit: (task: Task) => void;
   onDelete: (id: string) => void;
+  emptyMessage?: string;
 }
 
-function TaskList({ tasks, onToggle, onEdit, onDelete }: TaskListProps): JSX.Element {
+function TaskList({ tasks, onToggle, onEdit, onDelete, emptyMessage = "No tenés tareas todavía. ¡Creá una!" }: TaskListProps): JSX.Element {
   if (tasks.length === 0) {
-    return <p className={styles.empty}>No tenés tareas todavía. ¡Creá una!</p>;
+    return <p className={styles.empty}>{emptyMessage}</p>;
   }
 
   return (
