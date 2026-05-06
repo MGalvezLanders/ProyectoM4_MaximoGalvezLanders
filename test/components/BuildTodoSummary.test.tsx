@@ -141,13 +141,25 @@ describe('EmailSummaryButton', () => {
     expect(await screen.findByText(/email enviado correctamente/i)).toBeInTheDocument()
   })
 
-  it('muestra mensaje de error cuando la API responde con error', async () => {
+  it('muestra mensaje de error genérico cuando la API responde con error', async () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
       new Response(JSON.stringify({ message: 'Error de servidor' }), { status: 500 })
     )
     render(<EmailSummaryButton todos={[]} userEmail="test@test.com" />)
     await userEvent.click(screen.getByRole('button'))
     expect(await screen.findByText('Error de servidor')).toBeInTheDocument()
+  })
+
+  it('muestra mensaje claro cuando el email no está verificado en SES', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response(
+        JSON.stringify({ error: 'MessageRejected', message: 'Email address is not verified.' }),
+        { status: 500 }
+      )
+    )
+    render(<EmailSummaryButton todos={[]} userEmail="noVerificado@test.com" />)
+    await userEvent.click(screen.getByRole('button'))
+    expect(await screen.findByText(/no está verificado/i)).toBeInTheDocument()
   })
 
   it('muestra error de conexión si fetch lanza excepción', async () => {

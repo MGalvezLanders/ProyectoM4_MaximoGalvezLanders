@@ -74,7 +74,11 @@ export default function EmailSummaryButton({ todos, userEmail }: Props) {
 
       if (!res.ok) {
         setStatus("error");
-        setErrorMsg(data?.message || "Ocurrió un error al enviar el email.");
+        if (data?.error === "MessageRejected") {
+          setErrorMsg("Tu email no está verificado para recibir correos. Contactá al administrador para habilitarlo.");
+        } else {
+          setErrorMsg(data?.message || "Ocurrió un error al enviar el email.");
+        }
         return;
       }
 
