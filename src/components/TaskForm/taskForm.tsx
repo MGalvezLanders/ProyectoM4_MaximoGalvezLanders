@@ -103,6 +103,7 @@ function TaskForm({
             id="task-duedate"
             type="date"
             value={dueDate}
+            min={toDateInputValue(new Date())}
             onChange={(e) => setDueDate(e.target.value)}
           />
           <span className={styles.hint}>Sin fecha: vence en 1 mes</span>
